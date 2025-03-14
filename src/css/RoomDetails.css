@@ -1,0 +1,200 @@
+.room-details-container {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.room-details-container h2 {
+    color: #3b82f6;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.current-booking {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.current-booking h3 {
+    color: #60a5fa;
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+}
+
+.room-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.info-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.info-icon {
+    font-size: 1.5rem;
+    color: #3b82f6;
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-content label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.info-content span {
+    color: white;
+    font-size: 1.1rem;
+}
+
+.booking-dates {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.date-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.date-icon {
+    color: #3b82f6;
+}
+
+.date-group label {
+    display: block;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+}
+
+.date-group span {
+    color: white;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-badge.completed {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.no-booking {
+    text-align: center;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.no-booking-icon {
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 1rem;
+}
+
+.book-now-button {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.book-now-button:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.booking-history {
+    margin-top: 3rem;
+}
+
+.booking-history h3 {
+    color: #60a5fa;
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+}
+
+.history-table {
+    overflow-x: auto;
+}
+
+.history-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    text-align: left;
+    padding: 1rem;
+}
+
+.history-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.no-history {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 2rem;
+}
+
+@media (max-width: 768px) {
+    .room-details-container {
+        padding: 1rem;
+    }
+
+    .booking-dates {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .history-table {
+        font-size: 0.9rem;
+    }
+} 

@@ -1,0 +1,14 @@
+/*navbar styling*/
+.navbar {
+    background-color: black !important; 
+  }
+  .nav-link {
+    color: rgb(255, 255, 255) !important;
+  }
+  .navbar-brand{
+    color: white !important;
+    margin-left: auto !important;
+  }
+  .navbar-nav {
+    margin-left: auto !important;
+  }

@@ -1,0 +1,211 @@
+.manage-students-container {
+    padding: 1rem;
+    min-height: calc(100vh - 200px);
+}
+
+.header-section {
+    margin-bottom: 2rem;
+}
+
+.header-section h2 {
+    color: #3b82f6;
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.filters {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-bar {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+.search-bar svg {
+    color: rgba(255, 255, 255, 0.7);
+    margin-right: 0.5rem;
+}
+
+.search-bar input {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 100%;
+}
+
+.search-bar input:focus {
+    outline: none;
+}
+
+.status-filter {
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    min-width: 150px;
+}
+
+.students-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.student-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.student-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.student-icon {
+    font-size: 1.5rem;
+    color: #3b82f6;
+}
+
+.student-main-info {
+    flex: 1;
+}
+
+.student-main-info h3 {
+    color: white;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.reg-number {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+}
+
+.status-badge.active {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.status-badge.suspended {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.status-badge.graduated {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.student-details {
+    margin-bottom: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-row span:first-child {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.detail-row span:last-child {
+    color: white;
+}
+
+.student-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.student-actions button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.email-btn {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid #60a5fa !important;
+}
+
+.email-btn:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+.suspend-btn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid #ef4444 !important;
+}
+
+.suspend-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.activate-btn {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid #10b981 !important;
+}
+
+.activate-btn:hover {
+    background: rgba(16, 185, 129, 0.3);
+}
+
+/* Modal styles are inherited from ManageHostels.css */
+
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    .status-filter {
+        width: 100%;
+    }
+
+    .students-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .student-actions {
+        flex-direction: column;
+    }
+} 

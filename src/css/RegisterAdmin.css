@@ -1,0 +1,119 @@
+/* General container styles */
+.admin-register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+    margin-top: 2rem;
+    z-index: 1000;
+}
+
+/* Registration form styles */
+.admin-register-form {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Heading styles */
+.admin-register-form h2 {
+    color: #dc2626;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+/* Input field group */
+.admin-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.admin-form-group label {
+    display: block;
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.admin-form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 8px;
+    color: #1f2937;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.admin-form-group input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+.admin-form-group input::placeholder {
+    color: #6b7280;
+}
+
+/* Submit button */
+.admin-register-button {
+    width: 100%;
+    padding: 0.75rem;
+    background: #dc2626;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.admin-register-button:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.admin-register-button:disabled {
+    background: #f87171;
+    cursor: not-allowed;
+}
+
+/* Notice section */
+.admin-notice {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.admin-notice button {
+    color: #dc2626;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.admin-notice button:hover {
+    color: #b91c1c;
+}
+
+.admin-warning {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(234, 179, 8, 0.1);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    border-radius: 8px;
+    color: #854d0e;
+}

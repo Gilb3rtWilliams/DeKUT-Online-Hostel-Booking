@@ -1,0 +1,191 @@
+/* Main container */
+.min-h-screen {
+    min-height: 100vh;
+    position: relative;
+    transition: background-image 0.5s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* Main content wrapper */
+.flex {
+    display: flex;
+    position: relative;
+    z-index: 2;
+    min-height: calc(100vh - 60px); /* Account for footer height */
+}
+
+/* Sidebar specific styles */
+.sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    height: calc(100vh - 60px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+}
+
+/* Main content area */
+.flex-1 {
+    flex: 1;
+    margin-left: 280px; /* Match sidebar width */
+    padding: 2rem;
+    min-height: calc(100vh - 60px);
+    width: calc(100% - 280px);
+    overflow-y: auto;
+}
+
+/* Welcome message styling */
+.welcome-message {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-message h1 {
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Content area styling */
+.content-area {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-height: calc(100vh - 300px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #333;
+}
+
+/* Footer styling */
+footer {
+    width: 100%;
+    padding: 1rem 0;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    position: fixed;
+    bottom: 0;
+    z-index: 3;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+footer p {
+    color: white;
+    font-size: 0.875rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 1rem;
+    }
+
+    .flex-1 {
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .welcome-message {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .welcome-message h1 {
+        font-size: 2rem;
+    }
+
+    .content-area {
+        padding: 1.5rem;
+        margin-bottom: 4rem;
+    }
+}
+
+/* Animation classes for framer-motion */
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Text colors */
+.text-white {
+    color: white;
+}
+
+.text-4xl {
+    font-size: 2.5rem;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+/* Spacing utilities */
+.mb-8 {
+    margin-bottom: 2rem;
+}
+
+.p-4 {
+    padding: 1rem;
+}
+
+.py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+/* Background utilities */
+.bg-black {
+    background-color: black;
+}
+
+.bg-opacity-50 {
+    opacity: 0.5;
+}
+
+.backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+} 

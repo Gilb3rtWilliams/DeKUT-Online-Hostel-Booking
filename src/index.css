@@ -1,0 +1,50 @@
+::root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Navbar styles */
+.navbar {
+  background-color: black !important;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.nav-link {
+  color: white !important;
+}
+
+.navbar-brand {
+  color: white !important;
+  margin-left: auto !important;
+}
+
+.navbar-nav {
+  margin-left: auto !important;
+}
+
+body, #root, .overlay {
+  background: none !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.overlay, .background-dark, .dark-screen {
+  display: none !important;
+  visibility: hidden !important;
+}
