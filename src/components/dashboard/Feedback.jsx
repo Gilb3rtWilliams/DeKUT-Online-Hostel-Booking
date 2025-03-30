@@ -16,62 +16,80 @@ const Feedback = () => {
   });
 
   useEffect(() => {
-    // Simulate fetching feedback history
-    const fetchFeedback = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setFeedbackHistory([
-          {
-            id: 1,
-            date: '2024-01-15',
-            rating: 4,
-            cleanliness: 5,
-            maintenance: 4,
-            security: 5,
-            facilities: 4,
-            comment: "Great experience overall. The facilities are well-maintained.",
-            response: "Thank you for your positive feedback!"
-          },
-          {
-            id: 2,
-            date: '2023-12-10',
-            rating: 3,
-            cleanliness: 3,
-            maintenance: 4,
-            security: 5,
-            facilities: 3,
-            comment: "Security is excellent but cleanliness could be improved.",
-            response: null
-          }
-        ]);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching feedback:', error);
-        setLoading(false);
-      }
-    };
-
     fetchFeedback();
   }, []);
 
+  const fetchFeedback = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/feedback/student', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback');
+      }
+
+      const data = await response.json();
+      setFeedbackHistory(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your feedback submission logic here
-    const feedback = {
-      id: feedbackHistory.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      ...newFeedback,
-      response: null
-    };
-    setFeedbackHistory([feedback, ...feedbackHistory]);
-    setNewFeedback({
-      rating: 0,
-      cleanliness: 0,
-      maintenance: 0,
-      security: 0,
-      facilities: 0,
-      comment: ''
-    });
+    
+    // Validate all required fields
+    if (!newFeedback.rating || !newFeedback.cleanliness || !newFeedback.maintenance || 
+        !newFeedback.security || !newFeedback.facilities || !newFeedback.comment.trim()) {
+      alert('Please fill in all fields and provide ratings for all categories');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newFeedback)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit feedback');
+      }
+
+      const data = await response.json();
+      setFeedbackHistory([data.feedback, ...feedbackHistory]);
+      setNewFeedback({
+        rating: 0,
+        cleanliness: 0,
+        maintenance: 0,
+        security: 0,
+        facilities: 0,
+        comment: ''
+      });
+      alert('Feedback submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert(error.message || 'Failed to submit feedback. Please try again.');
+    }
   };
 
   const RatingStars = ({ value, onChange, readOnly }) => {
@@ -170,14 +188,14 @@ const Feedback = () => {
           <div className="history-list">
             {feedbackHistory.map((feedback) => (
               <motion.div
-                key={feedback.id}
+                key={feedback._id}
                 className="feedback-card"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
                 <div className="feedback-header">
                   <div className="feedback-date">
-                    {new Date(feedback.date).toLocaleDateString()}
+                    {new Date(feedback.createdAt).toLocaleDateString()}
                   </div>
                   <div className="overall-rating">
                     <RatingStars value={feedback.rating} readOnly={true} />
@@ -211,7 +229,10 @@ const Feedback = () => {
                 {feedback.response && (
                   <div className="admin-response">
                     <h4>Admin Response:</h4>
-                    <p>{feedback.response}</p>
+                    <p>{feedback.response.message}</p>
+                    <span className="response-date">
+                      {new Date(feedback.response.date).toLocaleDateString()}
+                    </span>
                   </div>
                 )}
               </motion.div>

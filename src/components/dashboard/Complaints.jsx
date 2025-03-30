@@ -15,61 +15,68 @@ const Complaints = () => {
   });
 
   useEffect(() => {
-    // Simulate fetching complaints
-    const fetchComplaints = async () => {
-      try {
-        // Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setComplaints([
-          {
-            id: 1,
-            title: "Faulty Light Fixture",
-            description: "The ceiling light in my room is not working properly.",
-            category: "Electrical",
-            priority: "high",
-            status: "pending",
-            date: "2024-01-15",
-            response: null
-          },
-          {
-            id: 2,
-            title: "Water Pressure Issue",
-            description: "Low water pressure in the bathroom.",
-            category: "Plumbing",
-            priority: "medium",
-            status: "resolved",
-            date: "2024-01-10",
-            response: "Maintenance team has fixed the water pressure regulator."
-          }
-        ]);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching complaints:', error);
-        setLoading(false);
-      }
-    };
-
     fetchComplaints();
   }, []);
 
+  const fetchComplaints = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/complaints/student', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch complaints');
+      }
+
+      const data = await response.json();
+      setComplaints(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching complaints:', error);
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your complaint submission logic here
-    const complaint = {
-      id: complaints.length + 1,
-      ...newComplaint,
-      status: 'pending',
-      date: new Date().toISOString().split('T')[0],
-      response: null
-    };
-    setComplaints([complaint, ...complaints]);
-    setShowForm(false);
-    setNewComplaint({
-      title: '',
-      description: '',
-      category: '',
-      priority: 'medium'
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newComplaint)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit complaint');
+      }
+
+      const data = await response.json();
+      setComplaints([data.complaint, ...complaints]);
+      setShowForm(false);
+      setNewComplaint({
+        title: '',
+        description: '',
+        category: '',
+        priority: 'medium'
+      });
+    } catch (error) {
+      console.error('Error submitting complaint:', error);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -180,7 +187,7 @@ const Complaints = () => {
           {complaints.length > 0 ? (
             complaints.map((complaint) => (
               <motion.div
-                key={complaint.id}
+                key={complaint._id}
                 className="complaint-card"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -200,17 +207,24 @@ const Complaints = () => {
                       <FaExclamationCircle /> {complaint.category}
                     </span>
                     <span className="date">
-                      <FaClock /> {new Date(complaint.date).toLocaleDateString()}
+                      <FaClock /> {new Date(complaint.createdAt).toLocaleDateString()}
                     </span>
                     <span className={`priority priority-${complaint.priority}`}>
                       Priority: {complaint.priority}
                     </span>
                   </div>
 
-                  {complaint.response && (
+                  {complaint.replies && complaint.replies.length > 0 && (
                     <div className="complaint-response">
-                      <h4>Response:</h4>
-                      <p>{complaint.response}</p>
+                      <h4>Responses:</h4>
+                      {complaint.replies.map((reply, index) => (
+                        <div key={index} className="reply-item">
+                          <p className="reply-message">{reply.message}</p>
+                          <span className="reply-date">
+                            {new Date(reply.date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

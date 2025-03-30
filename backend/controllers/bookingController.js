@@ -1,6 +1,5 @@
 const Booking = require("../models/Booking");
 const Hostel = require("../models/Hostel");
-const sendEmail = require("../utils/emailService");
 const { createNotification } = require("./notificationController");
 const { bookingSchema } = require("../utils/validation");
 
@@ -13,7 +12,7 @@ const bookHostel = async (req, res) => {
       const { error } = bookingSchema.validate(req.body);
       if (error) return res.status(400).json({ message: error.details[0].message });
   
-      const { hostelId, roomNumber } = req.body;
+      const { hostelId, roomNumber, price, checkInDate, checkOutDate, status } = req.body;
   
       const hostel = await Hostel.findById(hostelId);
       if (!hostel) return res.status(404).json({ message: "Hostel not found" });
@@ -26,67 +25,94 @@ const bookHostel = async (req, res) => {
         student: req.user._id,
         hostel: hostelId,
         roomNumber,
-        status: "Pending",
+        price,
+        checkInDate,
+        checkOutDate,
+        status: "Pending" // Set initial status to Pending
       });
   
       await booking.save();
-      res.status(201).json({ message: "Booking request submitted", booking });
+
+      // Create notification for admin
+      await createNotification(
+        req.user._id,
+        `New booking request for ${hostel.name}, Room ${roomNumber}`
+      );
+
+      res.status(201).json({ 
+        message: "Booking request submitted successfully", 
+        booking 
+      });
     } catch (error) {
-      res.status(500).json({ message: "Server error", error });
+      console.error("Booking error:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   };
 
-// @desc Approve booking
+// @desc Update booking status
 // @route PUT /api/bookings/:id/approve
 // @access Admin
-const approveBooking = async (req, res) => {
-    try {
-      const booking = await Booking.findById(req.params.id).populate("student");
-      if (!booking) return res.status(404).json({ message: "Booking not found" });
-  
-      if (booking.status !== "Pending") {
-        return res.status(400).json({ message: "Booking already processed" });
-      }
-  
-      booking.status = "Approved";
-      await booking.save();
-  
-      // Send notification
-      await createNotification(booking.student._id, `Your booking for Room ${booking.roomNumber} has been approved.`);
-  
-      res.json({ message: "Booking approved", booking });
-    } catch (error) {
-      res.status(500).json({ message: "Server error", error });
+const updateBookingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const booking = await Booking.findById(id).populate('hostel');
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
     }
-  };
+
+    // Update booking status
+    booking.status = status;
+    await booking.save();
+
+    // If approved, update hostel's available rooms
+    if (status === "Approved") {
+      booking.hostel.availableRooms -= 1;
+      await booking.hostel.save();
+    }
+
+    // Create notification for student
+    await createNotification(
+      booking.student,
+      `Your booking for ${booking.hostel.name}, Room ${booking.roomNumber} has been ${status.toLowerCase()}`
+    );
+
+    res.json({ 
+      message: `Booking ${status.toLowerCase()} successfully`,
+      booking 
+    });
+  } catch (error) {
+    console.error("Update booking status error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 // @desc Cancel booking
 // @route DELETE /api/bookings/:id/cancel
 // @access Student/Admin
 const cancelBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id).populate('hostel');
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
+    // Update hostel's available rooms
+    booking.hostel.availableRooms += 1;
+    await booking.hostel.save();
+
     await booking.deleteOne();
-    await sendEmail(booking.student.email, "Booking Canceled", `Your booking has been canceled.`);
 
-    res.json({ message: "Booking canceled" });
+    // Create notification
+    await createNotification(
+      req.user._id,
+      `Your booking for ${booking.hostel.name}, Room ${booking.roomNumber} has been canceled.`
+    );
+
+    res.json({ message: "Booking canceled successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Cancel booking error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @desc Get all bookings
-// @route GET /api/bookings
-// @access Admin
-const getAllBookings = async (req, res) => {
-  try {
-    const bookings = await Booking.find().populate("student", "name email").populate("hostel", "name");
-    res.json(bookings);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
-  }
-};
-
-module.exports = { bookHostel, approveBooking, cancelBooking, getAllBookings };
+module.exports = { bookHostel, cancelBooking, updateBookingStatus };

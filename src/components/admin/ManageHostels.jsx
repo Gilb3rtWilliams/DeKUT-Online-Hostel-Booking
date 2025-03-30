@@ -32,34 +32,38 @@ const ManageHostels = () => {
 
   const fetchHostels = async () => {
     try {
-      // Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setHostels([
-        {
-          id: 1,
-          name: 'Block A',
-          gender: 'male',
-          totalRooms: 100,
-          occupiedRooms: 75,
-          description: 'Male hostel block with modern facilities',
-          rooms: [
-            { id: 1, roomNumber: 'A101', type: 'single', price: 15000, status: 'occupied' },
-            { id: 2, roomNumber: 'A102', type: 'sharing', price: 12000, status: 'available' },
-          ]
-        },
-        {
-          id: 2,
-          name: 'Block B',
-          gender: 'female',
-          totalRooms: 100,
-          occupiedRooms: 80,
-          description: 'Female hostel block with enhanced security',
-          rooms: [
-            { id: 3, roomNumber: 'B101', type: 'single', price: 15000, status: 'available' },
-            { id: 4, roomNumber: 'B102', type: 'sharing', price: 12000, status: 'occupied' },
-          ]
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/hostels', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ]);
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch hostels');
+      }
+
+      const data = await response.json();
+      
+      // Transform the data to match the component's expected structure
+      const transformedHostels = data.map(hostel => ({
+        id: hostel._id,
+        name: hostel.name,
+        gender: hostel.gender,
+        totalRooms: hostel.totalRooms,
+        occupiedRooms: hostel.totalRooms - hostel.availableRooms,
+        description: hostel.description,
+        location: hostel.location,
+        pricePerRoom: hostel.pricePerRoom,
+        rooms: [] // We'll handle rooms separately if needed
+      }));
+
+      setHostels(transformedHostels);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching hostels:', error);
@@ -69,16 +73,58 @@ const ManageHostels = () => {
 
   const handleAddHostel = async (e) => {
     e.preventDefault();
-    // Add your hostel creation logic here
-    const newHostelData = {
-      id: hostels.length + 1,
-      ...newHostel,
-      occupiedRooms: 0,
-      rooms: []
-    };
-    setHostels([...hostels, newHostelData]);
-    setShowAddForm(false);
-    setNewHostel({ name: '', gender: 'male', totalRooms: '', description: '' });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to add a hostel');
+        return;
+      }
+
+      const hostelData = {
+        name: newHostel.name,
+        location: newHostel.location || 'Dekut Campus',
+        totalRooms: parseInt(newHostel.totalRooms),
+        availableRooms: parseInt(newHostel.totalRooms),
+        pricePerRoom: parseInt(newHostel.pricePerRoom) || 0,
+        images: [],
+        gender: newHostel.gender,
+        description: newHostel.description
+      };
+
+      const response = await fetch('http://localhost:5000/api/hostels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(hostelData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to add hostel');
+      }
+
+      const data = await response.json();
+      setShowAddForm(false);
+      setNewHostel({ 
+        name: '', 
+        gender: 'male', 
+        totalRooms: '', 
+        description: '',
+        location: '',
+        pricePerRoom: ''
+      });
+      
+      // Show success message
+      alert('Hostel added successfully!');
+      
+      // Refresh the hostels list
+      await fetchHostels();
+    } catch (error) {
+      console.error('Error adding hostel:', error);
+      alert(error.message || 'Failed to add hostel');
+    }
   };
 
   const handleAddRoom = async (e) => {
@@ -165,6 +211,8 @@ const ManageHostels = () => {
                 <p><strong>Gender:</strong> {hostel.gender}</p>
                 <p><strong>Total Rooms:</strong> {hostel.totalRooms}</p>
                 <p><strong>Occupied:</strong> {hostel.occupiedRooms}</p>
+                <p><strong>Price per Room:</strong> KES {hostel.pricePerRoom}</p>
+                <p><strong>Location:</strong> {hostel.location}</p>
                 <p className="description">{hostel.description}</p>
               </div>
 
@@ -226,6 +274,16 @@ const ManageHostels = () => {
               </div>
 
               <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  value={newHostel.location}
+                  onChange={(e) => setNewHostel({...newHostel, location: e.target.value})}
+                  placeholder="e.g., Dekut Campus"
+                />
+              </div>
+
+              <div className="form-group">
                 <label>Gender</label>
                 <select
                   value={newHostel.gender}
@@ -242,6 +300,16 @@ const ManageHostels = () => {
                   type="number"
                   value={newHostel.totalRooms}
                   onChange={(e) => setNewHostel({...newHostel, totalRooms: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Price per Room (KES)</label>
+                <input
+                  type="number"
+                  value={newHostel.pricePerRoom}
+                  onChange={(e) => setNewHostel({...newHostel, pricePerRoom: e.target.value})}
                   required
                 />
               </div>

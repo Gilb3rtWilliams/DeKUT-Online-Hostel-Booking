@@ -38,13 +38,13 @@ function Register({ onClose }) {
     try {
       const { confirmPassword, ...registrationData } = formData;
       
-      const response = await axios.post("http://localhost:5000/api/students/register", {
+      const response = await axios.post("http://localhost:5000/api/auth/register", {
         ...registrationData,
         role: "student"
       });
 
       if (response.data) {
-        setSuccess("Registration successful! Please check your email to verify your account.");
+        setSuccess("User registered successfully. You can now log in.");
         setFormData({
           name: "",
           email: "",
@@ -53,6 +53,11 @@ function Register({ onClose }) {
           studentID: "",
           profilePicture: ""
         });
+        
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          onClose("loginStudent");
+        }, 2000);
       }
     } catch (err) {
       console.error("Registration error:", err);
@@ -152,6 +157,7 @@ function Register({ onClose }) {
               transition={{ duration: 0.3 }}
             >
               {success}
+              <p className="mt-2">Redirecting to login...</p>
             </motion.div>
           )}
         </AnimatePresence>

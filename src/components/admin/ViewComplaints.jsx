@@ -18,26 +18,23 @@ const ViewComplaints = () => {
 
   const fetchComplaints = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setComplaints([
-        {
-          id: 1,
-          studentName: 'John Doe',
-          regNumber: 'CS/001/2023',
-          hostelBlock: 'Block A',
-          roomNumber: 'A101',
-          category: 'Maintenance',
-          subject: 'Water Supply Issue',
-          description: 'No water supply in the bathroom for the last 2 days.',
-          date: '2024-03-15',
-          status: 'pending',
-          priority: 'high',
-          attachments: ['plumbing.jpg'],
-          replies: []
-        },
-        // Add more mock data as needed
-      ]);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/complaints', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch complaints');
+      }
+
+      const data = await response.json();
+      setComplaints(data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching complaints:', error);
@@ -50,24 +47,30 @@ const ViewComplaints = () => {
     if (!selectedComplaint || !replyMessage.trim()) return;
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const reply = {
-        id: Date.now(),
-        message: replyMessage,
-        date: new Date().toISOString(),
-        adminName: 'Admin' // Replace with actual admin name
-      };
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
+      const response = await fetch(`http://localhost:5000/api/complaints/${selectedComplaint._id}/reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: replyMessage,
+          status: 'resolved' // Automatically mark as resolved when replying
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit reply');
+      }
+
+      const data = await response.json();
       setComplaints(complaints.map(complaint => 
-        complaint.id === selectedComplaint.id
-          ? {
-              ...complaint,
-              status: 'resolved',
-              replies: [...complaint.replies, reply]
-            }
-          : complaint
+        complaint._id === selectedComplaint._id ? data.complaint : complaint
       ));
 
       setShowReplyModal(false);
@@ -75,6 +78,35 @@ const ViewComplaints = () => {
       setSelectedComplaint(null);
     } catch (error) {
       console.error('Error submitting reply:', error);
+    }
+  };
+
+  const handleStatusUpdate = async (complaintId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/complaints/${complaintId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      const data = await response.json();
+      setComplaints(complaints.map(complaint => 
+        complaint._id === complaintId ? data.complaint : complaint
+      ));
+    } catch (error) {
+      console.error('Error updating status:', error);
     }
   };
 
@@ -97,8 +129,8 @@ const ViewComplaints = () => {
 
   const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = 
-      complaint.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      complaint.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       complaint.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filter === 'all' || complaint.status === filter;
     return matchesSearch && matchesFilter;
@@ -130,6 +162,7 @@ const ViewComplaints = () => {
           >
             <option value="all">All Complaints</option>
             <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
             <option value="resolved">Resolved</option>
           </select>
         </div>
@@ -141,7 +174,7 @@ const ViewComplaints = () => {
         <div className="complaints-grid">
           {filteredComplaints.map(complaint => (
             <motion.div
-              key={complaint.id}
+              key={complaint._id}
               className="complaint-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -150,7 +183,7 @@ const ViewComplaints = () => {
                 <div className="complaint-title">
                   <FaExclamationCircle className={`complaint-icon ${getPriorityColor(complaint.priority)}`} />
                   <div>
-                    <h3>{complaint.subject}</h3>
+                    <h3>{complaint.title}</h3>
                     <span className="category">{complaint.category}</span>
                   </div>
                 </div>
@@ -164,48 +197,25 @@ const ViewComplaints = () => {
 
               <div className="complaint-details">
                 <div className="student-info">
-                  <p><strong>{complaint.studentName}</strong> ({complaint.regNumber})</p>
-                  <p>
-                    {complaint.hostelBlock} - Room {complaint.roomNumber}
-                  </p>
+                  <p><strong>{complaint.student.name}</strong> ({complaint.student.email})</p>
                 </div>
                 <p className="description">{complaint.description}</p>
-                {complaint.attachments && complaint.attachments.length > 0 && (
-                  <div className="attachments">
-                    <p className="attachment-label">Attachments:</p>
-                    <div className="attachment-list">
-                      {complaint.attachments.map((file, index) => (
-                        <span key={index} className="attachment-item">
-                          {file}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="complaint-footer">
-                  <span className="date">
-                    {new Date(complaint.date).toLocaleDateString()}
+                <div className="complaint-meta">
+                  <span className="priority">
+                    Priority: {complaint.priority}
                   </span>
-                  {complaint.status === 'pending' && (
-                    <button
-                      className="reply-button"
-                      onClick={() => {
-                        setSelectedComplaint(complaint);
-                        setShowReplyModal(true);
-                      }}
-                    >
-                      <FaReply /> Reply
-                    </button>
-                  )}
+                  <span className="date">
+                    {new Date(complaint.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
 
-                {complaint.replies.length > 0 && (
+                {complaint.replies && complaint.replies.length > 0 && (
                   <div className="replies-section">
                     <h4>Replies</h4>
-                    {complaint.replies.map(reply => (
-                      <div key={reply.id} className="reply-item">
+                    {complaint.replies.map((reply, index) => (
+                      <div key={index} className="reply-item">
                         <div className="reply-header">
-                          <strong>{reply.adminName}</strong>
+                          <strong>{reply.admin.name}</strong>
                           <span>{new Date(reply.date).toLocaleDateString()}</span>
                         </div>
                         <p>{reply.message}</p>
@@ -213,6 +223,28 @@ const ViewComplaints = () => {
                     ))}
                   </div>
                 )}
+
+                <div className="complaint-actions">
+                  {complaint.status !== 'resolved' && (
+                    <>
+                      <button
+                        className="reply-button"
+                        onClick={() => {
+                          setSelectedComplaint(complaint);
+                          setShowReplyModal(true);
+                        }}
+                      >
+                        <FaReply /> Reply
+                      </button>
+                      <button
+                        className="status-button"
+                        onClick={() => handleStatusUpdate(complaint._id, 'in-progress')}
+                      >
+                        Mark In Progress
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
@@ -229,8 +261,8 @@ const ViewComplaints = () => {
           >
             <h3>Reply to Complaint</h3>
             <div className="complaint-summary">
-              <p><strong>Subject:</strong> {selectedComplaint.subject}</p>
-              <p><strong>Student:</strong> {selectedComplaint.studentName}</p>
+              <p><strong>Title:</strong> {selectedComplaint.title}</p>
+              <p><strong>Student:</strong> {selectedComplaint.student.name}</p>
             </div>
             <form onSubmit={handleReplySubmit}>
               <div className="form-group">

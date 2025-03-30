@@ -21,23 +21,23 @@ const ManageStudents = () => {
 
   const fetchStudents = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setStudents([
-        {
-          id: 1,
-          name: 'John Doe',
-          regNumber: 'CS/001/2023',
-          course: 'Computer Science',
-          year: 3,
-          email: 'john.doe@university.edu',
-          phone: '+254712345678',
-          status: 'active',
-          hostelBlock: 'Block A',
-          roomNumber: 'A101'
-        },
-        // Add more mock data as needed
-      ]);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/students', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch students');
+      }
+
+      const studentsData = await response.json();
+      setStudents(studentsData);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -47,10 +47,27 @@ const ManageStudents = () => {
 
   const handleStatusChange = async (studentId, newStatus) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/students/${studentId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update student status');
+      }
+
+      // Update local state
       setStudents(students.map(student => 
-        student.id === studentId 
+        student._id === studentId 
           ? { ...student, status: newStatus }
           : student
       ));
@@ -62,9 +79,29 @@ const ManageStudents = () => {
   const handleSendEmail = async (e) => {
     e.preventDefault();
     try {
-      // Simulate sending email
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Email sent to:', selectedStudent.email, emailContent);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          recipient: selectedStudent._id,
+          type: 'email',
+          title: emailContent.subject,
+          message: emailContent.message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
       setShowEmailModal(false);
       setEmailContent({ subject: '', message: '' });
       setSelectedStudent(null);
@@ -76,10 +113,16 @@ const ManageStudents = () => {
   const filteredStudents = students.filter(student => {
     const matchesSearch = 
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.regNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      student.regNumber?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filter === 'all' || student.status === filter;
     return matchesSearch && matchesFilter;
   });
+
+  const getCurrentBooking = (student) => {
+    return student.bookings.find(booking => 
+      booking.status === 'Confirmed' || booking.status === 'Pending'
+    );
+  };
 
   return (
     <motion.div
@@ -117,83 +160,92 @@ const ManageStudents = () => {
         <div className="loading">Loading students...</div>
       ) : (
         <div className="students-grid">
-          {filteredStudents.map(student => (
-            <motion.div
-              key={student.id}
-              className="student-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="student-header">
-                <FaUserGraduate className="student-icon" />
-                <div className="student-main-info">
-                  <h3>{student.name}</h3>
-                  <span className="reg-number">{student.regNumber}</span>
+          {filteredStudents.map(student => {
+            const currentBooking = getCurrentBooking(student);
+            return (
+              <motion.div
+                key={student._id}
+                className="student-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="student-header">
+                  <FaUserGraduate className="student-icon" />
+                  <div className="student-main-info">
+                    <h3>{student.name}</h3>
+                    <span className="reg-number">{student.regNumber}</span>
+                  </div>
+                  <span className={`status-badge ${student.status}`}>
+                    {student.status}
+                  </span>
                 </div>
-                <span className={`status-badge ${student.status}`}>
-                  {student.status}
-                </span>
-              </div>
 
-              <div className="student-details">
-                <div className="detail-row">
-                  <span>Course:</span>
-                  <span>{student.course}</span>
+                <div className="student-details">
+                  <div className="detail-row">
+                    <span>Course:</span>
+                    <span>{student.course}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Year:</span>
+                    <span>{student.yearOfStudy}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Email:</span>
+                    <span>{student.email}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Phone:</span>
+                    <span>{student.phoneNumber}</span>
+                  </div>
+                  {currentBooking && (
+                    <>
+                      <div className="detail-row">
+                        <span>Hostel:</span>
+                        <span>{currentBooking.hostel.name}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Room:</span>
+                        <span>{currentBooking.roomNumber}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Booking Status:</span>
+                        <span className={`booking-status ${currentBooking.status.toLowerCase()}`}>
+                          {currentBooking.status}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="detail-row">
-                  <span>Year:</span>
-                  <span>{student.year}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Email:</span>
-                  <span>{student.email}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Phone:</span>
-                  <span>{student.phone}</span>
-                </div>
-                {student.hostelBlock && (
-                  <>
-                    <div className="detail-row">
-                      <span>Hostel:</span>
-                      <span>{student.hostelBlock}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span>Room:</span>
-                      <span>{student.roomNumber}</span>
-                    </div>
-                  </>
-                )}
-              </div>
 
-              <div className="student-actions">
-                <button
-                  className="email-btn"
-                  onClick={() => {
-                    setSelectedStudent(student);
-                    setShowEmailModal(true);
-                  }}
-                >
-                  <FaEnvelope /> Email Student
-                </button>
-                {student.status === 'active' ? (
+                <div className="student-actions">
                   <button
-                    className="suspend-btn"
-                    onClick={() => handleStatusChange(student.id, 'suspended')}
+                    className="email-btn"
+                    onClick={() => {
+                      setSelectedStudent(student);
+                      setShowEmailModal(true);
+                    }}
                   >
-                    <FaBan /> Suspend
+                    <FaEnvelope /> Email Student
                   </button>
-                ) : (
-                  <button
-                    className="activate-btn"
-                    onClick={() => handleStatusChange(student.id, 'active')}
-                  >
-                    <FaCheck /> Activate
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                  {student.status === 'active' ? (
+                    <button
+                      className="suspend-btn"
+                      onClick={() => handleStatusChange(student._id, 'suspended')}
+                    >
+                      <FaBan /> Suspend
+                    </button>
+                  ) : (
+                    <button
+                      className="activate-btn"
+                      onClick={() => handleStatusChange(student._id, 'active')}
+                    >
+                      <FaCheck /> Activate
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 

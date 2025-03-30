@@ -160,10 +160,12 @@
     display: flex;
     gap: 1rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
 .booking-actions button {
     flex: 1;
+    min-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -173,6 +175,7 @@
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .details-btn {
@@ -256,5 +259,9 @@
 
     .booking-actions {
         flex-direction: column;
+    }
+
+    .booking-actions button {
+        width: 100%;
     }
 } 

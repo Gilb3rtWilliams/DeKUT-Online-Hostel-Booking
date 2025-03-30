@@ -24,11 +24,18 @@ const updateStudentProfile = async (req, res) => {
 
     // Update fields
     student.name = req.body.name || student.name;
-    student.email = req.body.email || student.email;
+    student.phoneNumber = req.body.phoneNumber || student.phoneNumber;
+    student.yearOfStudy = req.body.yearOfStudy || student.yearOfStudy;
+    student.course = req.body.course || student.course;
 
     // Save updated student
     const updatedStudent = await student.save();
-    res.status(200).json(updatedStudent);
+    
+    // Return updated student without password
+    const studentResponse = updatedStudent.toObject();
+    delete studentResponse.password;
+    
+    res.status(200).json(studentResponse);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

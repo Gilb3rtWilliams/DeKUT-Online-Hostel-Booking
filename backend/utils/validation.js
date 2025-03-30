@@ -8,12 +8,18 @@ const hostelSchema = Joi.object({
   availableRooms: Joi.number().min(0).required(),
   pricePerRoom: Joi.number().min(0).required(),
   images: Joi.array().items(Joi.string().uri()).optional(),
+  gender: Joi.string().valid('male', 'female').required(),
+  description: Joi.string().min(10).max(500).required()
 });
 
 // Booking Validation
 const bookingSchema = Joi.object({
   hostelId: Joi.string().required(),
   roomNumber: Joi.string().required(),
+  price: Joi.number().min(0).required(),
+  checkInDate: Joi.date().iso().required(),
+  checkOutDate: Joi.date().iso().min(Joi.ref('checkInDate')).required(),
+  status: Joi.string().valid('Active', 'Pending', 'Approved', 'Cancelled').default('Active')
 });
 
 // User Registration Validation

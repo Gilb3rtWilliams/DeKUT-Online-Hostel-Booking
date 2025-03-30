@@ -7,6 +7,8 @@ const hostelSchema = new mongoose.Schema({
   availableRooms: { type: Number, required: true, min: 0 },
   pricePerRoom: { type: Number, required: true, min: 0 },
   images: [{ type: String }],
+  gender: { type: String, required: true, enum: ['male', 'female'] },
+  description: { type: String, required: true, minlength: 10, maxlength: 500 }
 }, { timestamps: true });  // ✅ Adds createdAt and updatedAt fields
 
 // Reduce availableRooms when a room is booked

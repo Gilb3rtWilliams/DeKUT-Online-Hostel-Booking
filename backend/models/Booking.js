@@ -5,7 +5,10 @@ const bookingSchema = new mongoose.Schema({
   student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   hostel: { type: mongoose.Schema.Types.ObjectId, ref: "Hostel", required: true },
   roomNumber: { type: String, required: true },
-  status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
+  price: { type: Number, required: true },
+  checkInDate: { type: Date, required: true },
+  checkOutDate: { type: Date, required: true },
+  status: { type: String, enum: ["Active", "Pending", "Approved", "Cancelled"], default: "Active" }
 }, { timestamps: true });  // ✅ Adds createdAt and updatedAt fields
 
 

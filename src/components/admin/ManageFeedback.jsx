@@ -11,6 +11,7 @@ const ManageFeedback = () => {
   const [sortBy, setSortBy] = useState('date');
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [responseMessage, setResponseMessage] = useState('');
 
   useEffect(() => {
     fetchFeedback();
@@ -18,27 +19,23 @@ const ManageFeedback = () => {
 
   const fetchFeedback = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setFeedback([
-        {
-          id: 1,
-          studentName: 'John Doe',
-          regNumber: 'CS/001/2023',
-          hostelBlock: 'Block A',
-          rating: 4,
-          category: 'Facilities',
-          title: 'Great Amenities',
-          comment: 'The hostel facilities are well-maintained. The study room is particularly helpful.',
-          date: '2024-03-15',
-          status: 'published',
-          helpful: 15,
-          notHelpful: 2,
-          reported: false,
-          response: null
-        },
-        // Add more mock data as needed
-      ]);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/feedback', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch feedback');
+      }
+
+      const data = await response.json();
+      setFeedback(data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching feedback:', error);
@@ -48,29 +45,63 @@ const ManageFeedback = () => {
 
   const handleStatusChange = async (feedbackId, newStatus) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/feedback/${feedbackId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update feedback status');
+      }
+
+      const data = await response.json();
       setFeedback(feedback.map(item => 
-        item.id === feedbackId 
-          ? { ...item, status: newStatus }
-          : item
+        item._id === feedbackId ? data.feedback : item
       ));
     } catch (error) {
       console.error('Error updating feedback status:', error);
     }
   };
 
-  const handleResponse = async (feedbackId, response) => {
+  const handleResponse = async (e) => {
+    e.preventDefault();
+    if (!selectedFeedback || !responseMessage.trim()) return;
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/feedback/${selectedFeedback._id}/response`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: responseMessage })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit response');
+      }
+
+      const data = await response.json();
       setFeedback(feedback.map(item => 
-        item.id === feedbackId 
-          ? { ...item, response }
-          : item
+        item._id === selectedFeedback._id ? data.feedback : item
       ));
       setShowDetailsModal(false);
       setSelectedFeedback(null);
+      setResponseMessage('');
     } catch (error) {
       console.error('Error submitting response:', error);
     }
@@ -90,11 +121,9 @@ const ManageFeedback = () => {
       switch (sortBy) {
         case 'rating':
           return b.rating - a.rating;
-        case 'helpful':
-          return b.helpful - a.helpful;
         case 'date':
         default:
-          return new Date(b.date) - new Date(a.date);
+          return new Date(b.createdAt) - new Date(a.createdAt);
       }
     });
   };
@@ -102,8 +131,7 @@ const ManageFeedback = () => {
   const filteredFeedback = feedback
     .filter(item => {
       const matchesSearch = 
-        item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.comment.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filter === 'all' || item.status === filter;
       return matchesSearch && matchesFilter;
@@ -136,9 +164,9 @@ const ManageFeedback = () => {
             className="status-filter"
           >
             <option value="all">All Feedback</option>
+            <option value="pending">Pending</option>
             <option value="published">Published</option>
             <option value="hidden">Hidden</option>
-            <option value="reported">Reported</option>
           </select>
           <select
             value={sortBy}
@@ -147,7 +175,6 @@ const ManageFeedback = () => {
           >
             <option value="date">Latest First</option>
             <option value="rating">Highest Rating</option>
-            <option value="helpful">Most Helpful</option>
           </select>
         </div>
       </div>
@@ -158,15 +185,15 @@ const ManageFeedback = () => {
         <div className="feedback-grid">
           {sortedFeedback.map(item => (
             <motion.div
-              key={item.id}
+              key={item._id}
               className="feedback-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="feedback-header">
                 <div className="student-info">
-                  <h3>{item.studentName}</h3>
-                  <span className="reg-number">{item.regNumber}</span>
+                  <h3>{item.student.name}</h3>
+                  <span className="student-email">{item.student.email}</span>
                 </div>
                 <div className="rating">
                   {renderStars(item.rating)}
@@ -174,39 +201,41 @@ const ManageFeedback = () => {
               </div>
 
               <div className="feedback-content">
-                <div className="feedback-title">
-                  <h4>{item.title}</h4>
-                  <span className="category">{item.category}</span>
+                <div className="ratings-summary">
+                  <div className="rating-item">
+                    <span>Cleanliness</span>
+                    {renderStars(item.cleanliness)}
+                  </div>
+                  <div className="rating-item">
+                    <span>Maintenance</span>
+                    {renderStars(item.maintenance)}
+                  </div>
+                  <div className="rating-item">
+                    <span>Security</span>
+                    {renderStars(item.security)}
+                  </div>
+                  <div className="rating-item">
+                    <span>Facilities</span>
+                    {renderStars(item.facilities)}
+                  </div>
                 </div>
+
                 <p className="comment">{item.comment}</p>
                 
                 {item.response && (
                   <div className="admin-response">
                     <strong>Admin Response:</strong>
-                    <p>{item.response}</p>
+                    <p>{item.response.message}</p>
+                    <span className="response-date">
+                      {new Date(item.response.date).toLocaleDateString()}
+                    </span>
                   </div>
                 )}
-
-                <div className="feedback-stats">
-                  <div className="helpful-stats">
-                    <span>
-                      <FaThumbsUp /> {item.helpful}
-                    </span>
-                    <span>
-                      <FaThumbsDown /> {item.notHelpful}
-                    </span>
-                  </div>
-                  {item.reported && (
-                    <span className="reported">
-                      <FaFlag /> Reported
-                    </span>
-                  )}
-                </div>
               </div>
 
               <div className="feedback-footer">
                 <span className="date">
-                  {new Date(item.date).toLocaleDateString()}
+                  {new Date(item.createdAt).toLocaleDateString()}
                 </span>
                 <div className="actions">
                   <button
@@ -218,19 +247,20 @@ const ManageFeedback = () => {
                   >
                     <FaComment /> Respond
                   </button>
-                  {item.status === 'published' ? (
-                    <button
-                      className="hide-btn"
-                      onClick={() => handleStatusChange(item.id, 'hidden')}
-                    >
-                      Hide
-                    </button>
-                  ) : (
+                  {item.status === 'pending' && (
                     <button
                       className="publish-btn"
-                      onClick={() => handleStatusChange(item.id, 'published')}
+                      onClick={() => handleStatusChange(item._id, 'published')}
                     >
                       Publish
+                    </button>
+                  )}
+                  {item.status === 'published' && (
+                    <button
+                      className="hide-btn"
+                      onClick={() => handleStatusChange(item._id, 'hidden')}
+                    >
+                      Hide
                     </button>
                   )}
                 </div>
@@ -253,19 +283,14 @@ const ManageFeedback = () => {
               <div className="rating">
                 {renderStars(selectedFeedback.rating)}
               </div>
-              <p><strong>{selectedFeedback.title}</strong></p>
               <p>{selectedFeedback.comment}</p>
             </div>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const response = e.target.response.value;
-              handleResponse(selectedFeedback.id, response);
-            }}>
+            <form onSubmit={handleResponse}>
               <div className="form-group">
                 <label>Your Response</label>
                 <textarea
-                  name="response"
-                  defaultValue={selectedFeedback.response || ''}
+                  value={responseMessage}
+                  onChange={(e) => setResponseMessage(e.target.value)}
                   required
                   rows={5}
                   placeholder="Type your response here..."
@@ -282,6 +307,7 @@ const ManageFeedback = () => {
                   onClick={() => {
                     setShowDetailsModal(false);
                     setSelectedFeedback(null);
+                    setResponseMessage('');
                   }}
                 >
                   Cancel

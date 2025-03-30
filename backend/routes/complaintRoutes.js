@@ -1,6 +1,12 @@
 const express = require("express");
 const { protect, studentOnly, adminOnly } = require("../middleware/authMiddleware");
-const { submitComplaint, getAllComplaints, getComplaintById, resolveComplaint } = require("../controllers/complaintController");
+const {
+  createComplaint,
+  getAllComplaints,
+  getStudentComplaints,
+  addReply,
+  updateComplaintStatus
+} = require("../controllers/complaintController");
 
 const router = express.Router();
 
@@ -32,10 +38,14 @@ const router = express.Router();
  *       500:
  *         description: Server error.
  */
-router.post("/", protect, studentOnly, submitComplaint);
+router.post("/", protect, studentOnly, createComplaint);
 
 router.get("/", protect, adminOnly, getAllComplaints);
-router.get("/:id", protect, adminOnly, getComplaintById);
-router.put("/:id/resolve", protect, adminOnly, resolveComplaint);
+
+router.get("/student", protect, studentOnly, getStudentComplaints);
+
+router.post("/:id/reply", protect, adminOnly, addReply);
+
+router.put("/:id/status", protect, adminOnly, updateComplaintStatus);
 
 module.exports = router;

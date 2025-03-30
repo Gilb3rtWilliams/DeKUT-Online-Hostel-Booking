@@ -3,13 +3,36 @@ const Booking = require("../models/Booking");
 const Complaint = require("../models/Complaint");
 const Feedback = require("../models/Feedback");
 
-// Get all students
+// Get all students with bookings
 const getAllStudents = async (req, res) => {
   try {
-    const students = await User.find({ role: "student" }).select("-password");
+    // Get all bookings with populated student data
+    const bookings = await Booking.find()
+      .populate("student", "-password")
+      .populate("hostel", "name location");
+
+    // Get unique students from bookings
+    const uniqueStudents = bookings.reduce((acc, booking) => {
+      const studentId = booking.student._id.toString();
+      if (!acc[studentId]) {
+        acc[studentId] = {
+          ...booking.student.toObject(),
+          bookings: []
+        };
+      }
+      acc[studentId].bookings.push(booking);
+      return acc;
+    }, {});
+
+    // Convert to array and sort by name
+    const students = Object.values(uniqueStudents).sort((a, b) => 
+      a.name.localeCompare(b.name)
+    );
+
     res.status(200).json(students);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.error('Get students error:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

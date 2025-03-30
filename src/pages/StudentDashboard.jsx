@@ -89,8 +89,8 @@ const StudentDashboard = () => {
           transition={{ duration: 0.5 }}
         >
           {activeTab === "profile" && <Profile />}
-          {activeTab === "bookHostel" && <BookHostel />}
-          {activeTab === "roomDetails" && <RoomDetails />}
+          {activeTab === "bookHostel" && <BookHostel setActiveTab={setActiveTab} />}
+          {activeTab === "roomDetails" && <RoomDetails setActiveTab={setActiveTab} />}
           {activeTab === "complaints" && <Complaints />}
           {activeTab === "feedback" && <Feedback />}
         </motion.div>

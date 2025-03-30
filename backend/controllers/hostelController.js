@@ -36,17 +36,27 @@ const addHostel = async (req, res) => {
       const { error } = hostelSchema.validate(req.body);
       if (error) return res.status(400).json({ message: error.details[0].message });
   
-      const { name, location, totalRooms, availableRooms, pricePerRoom, images } = req.body;
+      const { name, location, totalRooms, availableRooms, pricePerRoom, images, gender, description } = req.body;
   
       const hostelExists = await Hostel.findOne({ name });
       if (hostelExists) return res.status(400).json({ message: "Hostel already exists" });
   
-      const hostel = new Hostel({ name, location, totalRooms, availableRooms, pricePerRoom, images });
+      const hostel = new Hostel({ 
+        name, 
+        location, 
+        totalRooms, 
+        availableRooms, 
+        pricePerRoom, 
+        images,
+        gender,
+        description
+      });
       await hostel.save();
   
       res.status(201).json({ message: "Hostel added successfully", hostel });
     } catch (error) {
-      res.status(500).json({ message: "Server error", error });
+      console.error('Error adding hostel:', error);
+      res.status(500).json({ message: "Server error", error: error.message });
     }
   };
 

@@ -17,27 +17,24 @@ const ViewBookings = () => {
 
   const fetchBookings = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setBookings([
-        {
-          id: 1,
-          studentName: 'John Doe',
-          regNumber: 'CS/001/2023',
-          hostelBlock: 'Block A',
-          roomNumber: 'A101',
-          roomType: 'Single',
-          bookingDate: '2024-03-15',
-          status: 'pending',
-          duration: '1 semester',
-          amount: 15000,
-          paymentStatus: 'paid',
-          specialRequests: 'Ground floor preferred',
-          contactNumber: '+254712345678',
-          email: 'john.doe@university.edu'
-        },
-        // Add more mock data as needed
-      ]);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch bookings');
+      }
+
+      const data = await response.json();
+      console.log('Fetched bookings:', data);
+      setBookings(data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -47,33 +44,52 @@ const ViewBookings = () => {
 
   const handleStatusChange = async (bookingId, newStatus) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setBookings(bookings.map(booking => 
-        booking.id === bookingId 
-          ? { ...booking, status: newStatus }
-          : booking
-      ));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update booking status');
+      }
+
+      // Show success message
+      alert(`Booking ${newStatus.toLowerCase()} successfully`);
+      
+      // Refresh the bookings list
+      fetchBookings();
     } catch (error) {
       console.error('Error updating booking status:', error);
+      alert(error.message);
     }
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'approved': return 'success';
       case 'rejected': return 'danger';
       case 'pending': return 'warning';
+      case 'active': return 'info';
       default: return 'default';
     }
   };
 
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = 
-      booking.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.regNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.roomNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === 'all' || booking.status === filter;
+      booking.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.hostel.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'all' || booking.status.toLowerCase() === filter;
     return matchesSearch && matchesFilter;
   });
 
@@ -91,7 +107,7 @@ const ViewBookings = () => {
             <FaSearch />
             <input
               type="text"
-              placeholder="Search by name, reg number or room..."
+              placeholder="Search by name, room or hostel..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -105,6 +121,7 @@ const ViewBookings = () => {
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
+            <option value="active">Active</option>
           </select>
         </div>
       </div>
@@ -113,80 +130,81 @@ const ViewBookings = () => {
         <div className="loading">Loading bookings...</div>
       ) : (
         <div className="bookings-grid">
-          {filteredBookings.map(booking => (
-            <motion.div
-              key={booking.id}
-              className="booking-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="booking-header">
-                <div className="booking-title">
-                  <FaCalendarAlt className="booking-icon" />
-                  <div>
-                    <h3>{booking.studentName}</h3>
-                    <span className="reg-number">{booking.regNumber}</span>
+          {filteredBookings.map(booking => {
+            console.log('Booking status:', booking.status);
+            return (
+              <motion.div
+                key={booking._id}
+                className="booking-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="booking-header">
+                  <div className="booking-title">
+                    <FaCalendarAlt className="booking-icon" />
+                    <div>
+                      <h3>{booking.student.name}</h3>
+                      <span className="reg-number">{booking.student.email}</span>
+                    </div>
                   </div>
-                </div>
-                <span className={`status-badge ${getStatusColor(booking.status)}`}>
-                  {booking.status}
-                </span>
-              </div>
-
-              <div className="booking-details">
-                <div className="detail-row">
-                  <span>Hostel:</span>
-                  <span>{booking.hostelBlock}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Room:</span>
-                  <span>{booking.roomNumber}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Type:</span>
-                  <span>{booking.roomType}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Date:</span>
-                  <span>{new Date(booking.bookingDate).toLocaleDateString()}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Payment:</span>
-                  <span className={`payment-status ${booking.paymentStatus}`}>
-                    {booking.paymentStatus}
+                  <span className={`status-badge ${getStatusColor(booking.status)}`}>
+                    {booking.status}
                   </span>
                 </div>
-              </div>
 
-              <div className="booking-actions">
-                <button
-                  className="details-btn"
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setShowDetailsModal(true);
-                  }}
-                >
-                  <FaInfoCircle /> View Details
-                </button>
-                {booking.status === 'pending' && (
-                  <>
-                    <button
-                      className="approve-btn"
-                      onClick={() => handleStatusChange(booking.id, 'approved')}
-                    >
-                      <FaCheck /> Approve
-                    </button>
-                    <button
-                      className="reject-btn"
-                      onClick={() => handleStatusChange(booking.id, 'rejected')}
-                    >
-                      <FaTimes /> Reject
-                    </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                <div className="booking-details">
+                  <div className="detail-row">
+                    <span>Hostel:</span>
+                    <span>{booking.hostel.name}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Room:</span>
+                    <span>{booking.roomNumber}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Price:</span>
+                    <span>KES {booking.price}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Check-in:</span>
+                    <span>{new Date(booking.checkInDate).toLocaleDateString()}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span>Check-out:</span>
+                    <span>{new Date(booking.checkOutDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                <div className="booking-actions">
+                  <button
+                    className="details-btn"
+                    onClick={() => {
+                      setSelectedBooking(booking);
+                      setShowDetailsModal(true);
+                    }}
+                  >
+                    <FaInfoCircle /> View Details
+                  </button>
+                  {booking.status === 'Pending' && (
+                    <>
+                      <button
+                        className="approve-btn"
+                        onClick={() => handleStatusChange(booking._id, 'Approved')}
+                      >
+                        <FaCheck /> Approve
+                      </button>
+                      <button
+                        className="reject-btn"
+                        onClick={() => handleStatusChange(booking._id, 'Rejected')}
+                      >
+                        <FaTimes /> Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
@@ -204,47 +222,41 @@ const ViewBookings = () => {
                 <h4>Student Information</h4>
                 <div className="detail-item">
                   <span>Name:</span>
-                  <span>{selectedBooking.studentName}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Registration Number:</span>
-                  <span>{selectedBooking.regNumber}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Contact:</span>
-                  <span>{selectedBooking.contactNumber}</span>
+                  <span>{selectedBooking.student.name}</span>
                 </div>
                 <div className="detail-item">
                   <span>Email:</span>
-                  <span>{selectedBooking.email}</span>
+                  <span>{selectedBooking.student.email}</span>
                 </div>
               </div>
 
               <div className="detail-group">
                 <h4>Booking Information</h4>
                 <div className="detail-item">
-                  <span>Hostel Block:</span>
-                  <span>{selectedBooking.hostelBlock}</span>
+                  <span>Hostel:</span>
+                  <span>{selectedBooking.hostel.name}</span>
                 </div>
                 <div className="detail-item">
                   <span>Room Number:</span>
                   <span>{selectedBooking.roomNumber}</span>
                 </div>
                 <div className="detail-item">
-                  <span>Room Type:</span>
-                  <span>{selectedBooking.roomType}</span>
+                  <span>Price:</span>
+                  <span>KES {selectedBooking.price}</span>
                 </div>
                 <div className="detail-item">
-                  <span>Duration:</span>
-                  <span>{selectedBooking.duration}</span>
+                  <span>Check-in Date:</span>
+                  <span>{new Date(selectedBooking.checkInDate).toLocaleDateString()}</span>
                 </div>
                 <div className="detail-item">
-                  <span>Amount:</span>
-                  <span>KES {selectedBooking.amount}</span>
+                  <span>Check-out Date:</span>
+                  <span>{new Date(selectedBooking.checkOutDate).toLocaleDateString()}</span>
                 </div>
                 <div className="detail-item">
-                  <span>Special Requests:</span>
-                  <span>{selectedBooking.specialRequests || 'None'}</span>
+                  <span>Status:</span>
+                  <span className={`status-badge ${getStatusColor(selectedBooking.status)}`}>
+                    {selectedBooking.status}
+                  </span>
                 </div>
               </div>
             </div>
